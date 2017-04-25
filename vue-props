@@ -1,0 +1,134 @@
+父组件
+<template>
+  <div id="app">
+    
+    <div>详情内容</div>
+    <button v-on:click="startCount">开始</button>
+    
+    <Info :startCountsub="startCountState"  />
+
+  </div>
+</template>
+
+<script>
+  import bus from '../../bus/bus.js';
+  import 'common/css/reset.css';
+  import Hello from 'components/Hello/Hello'
+  import Info from 'components/info'
+  export default {
+    name: 'app',
+  data () {
+    return {      
+      startCountState:false
+    }
+  },
+    
+    methods:{
+       startCount:function(){
+         
+          this.startCountState=true;
+            console.log('this.startCountState:' + this.startCountState);
+            console.log("开始倒计时");
+          // bus.$emit("countDown");   不使用bus
+       }
+    },
+    components: {
+      Hello,Info
+    }
+  }
+</script>
+
+
+子组件：
+
+<template>
+  <div class="info">
+    <h1>{{ msg }}</h1>
+    
+      <img src="../module/detail/images/test.jpg" style="width:200px">
+
+      <h2><span>{{timeout}}</span>秒倒计时,父亲传过来的值：{{startCountState}}||{{startCountsub}}</h2>
+      <button v-on:click="startCount">开始</button>
+  </div>
+</template>
+
+<script>
+import bus from '../bus/bus.js';
+export default {
+  name: 'info',
+  props: ["startCountsub"], 
+  data () {
+    return {
+      msg: 'Welcome to Your Vue.js App info',
+      timeout:60,
+     // startCountState: this.$parent.startCountState,   //startCountsub
+      startCountState: this.startCountsub   //就初始化的时候更新一次，但在模板里会动态更新
+    }
+  },
+  computed: {
+
+  },
+  created(){
+    // this.countDown();
+    console.log(this.$parent);
+       bus.$on("countDown",()=>{
+            //this.startCountState=true
+            //this.countDown();
+            this.startCount();
+        });
+
+       let intval2=setInterval(()=>{
+                 console.log('儿子：this.startCountState:' + this.startCountState);
+                 if(this.$parent.startCountState){
+                     this.startCountState=true;
+                     
+                     this.countDown();
+                     clearInterval(intval2);
+                 }
+                    
+                },1000);
+
+  },
+  watch: {
+      startCountState:'countDown'
+  },
+  methods:{
+      countDown:function(){
+             //console.log('哈this.startCountsub:' + this.startCountsub);
+            
+             if(this.startCountState){
+                let intval=setInterval(()=>{
+
+                    this.timeout--;
+                    this.timeout==0 && clearInterval(intval);
+                },1000);
+            }
+
+      },
+       startCount:function(){
+        
+          this.startCountState=true;
+       }
+
+  }
+  
+}
+</script>
+
+
+bus
+
+import Vue from 'vue'
+var bus=new Vue();
+
+/*
+ bus.$on("haha1",(text)=>{
+            alert(text);
+        });
+ bus.$on("haha2",(text)=>{
+            alert('haha2:'+text);
+        })
+*/
+
+
+export  default  bus;
